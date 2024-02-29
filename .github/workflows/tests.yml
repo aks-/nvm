@@ -18,11 +18,21 @@ jobs:
       matrix:
         include:
           - shell: bash
-            suite: install_script
-      #   shell:
-      #     - bash
-      #   suite:
-      #     - install_script
+            suite: installation_node
+          - shell: bash
+            suite: xenial
+          - shell: sh
+            suite: installation_node
+          - shell: sh
+            suite: xenial
+          - shell: dash
+            suite: installation_node
+          - shell: dash
+            suite: xenial
+          - shell: zsh
+            suite: installation_node
+          - shell: zsh
+            suite: xenial
 
     steps:
       - name: Harden Runner
