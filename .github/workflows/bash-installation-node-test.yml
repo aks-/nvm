@@ -1,0 +1,44 @@
+name: Bash Installation Node Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js 16 using nvm
+        run: |
+          cd nvm
+          sh install.sh
+          . ~/.nvm/nvm.sh
+          nvm install 16
+          nvm use 16
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '2.7'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
+                                   libreadline-dev libsqlite3-dev wget curl llvm \
+                                   libncurses5-dev libncursesw5-dev xz-utils tk-dev \
+                                   libffi-dev liblzma-dev python-openssl
+          npm install -g urchin doctoc eclint dockerfile_lint
+
+      - name: Run installation_node test suite
+        run: |
+          make TEST_SUITE=installation_node URCHIN="$(npm bin)/urchin" test-bash
+
