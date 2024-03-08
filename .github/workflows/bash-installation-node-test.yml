@@ -1,5 +1,8 @@
 name: Bash Installation Node Test
 
+on:
+  [push, pull_request]
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -13,46 +16,39 @@ jobs:
           sudo apt-get update
           sudo sed -i 's/mozilla\/DST_Root_CA_X3.crt/!mozilla\/DST_Root_CA_X3.crt/g' /etc/ca-certificates.conf
           sudo update-ca-certificates -f
-          $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
           sudo apt-get update
           sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
                                    libreadline-dev libsqlite3-dev wget curl llvm \
                                    libncurses5-dev libncursesw5-dev xz-utils tk-dev \
                                    libffi-dev liblzma-dev
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
+          sudo apt-get install make
+          sudo apt-get install -y zsh
 
       - name: Install python
         run: |
           curl https://pyenv.run | bash
-          pyenv install 2.7
-          pyenv global 2.7
           export PYENV_ROOT="$HOME/.pyenv"
           [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
           eval "$(pyenv init -)"
           eval "$(pyenv virtualenv-init -)"
-
-      - name: Install python dependencies
-        run: |
-          sudo apt-get install -y python-openssl
+          pyenv install 2.7
+          pyenv global 2.7
 
       - name: Install nvm
         run: |
           ./install.sh
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-          nvm install 16
-          nvm use 16
-
-      - name: Install dependencies
-        run: |
-          npm install -g urchin doctoc eclint dockerfile_lint
 
       - name: Run installation_node test suite
+        env:
+          CXX: g++
+          CC: gcc
+          PATH: "$(echo $PATH | sed 's/::/:/'):/usr/lib/ccache/"
+          NVM_DIR: "$HOME/.nvm"
         run: |
-          make TEST_SUITE=installation_node URCHIN="$(npm bin)/urchin" test-bash
+          echo $PATH
+          echo $NVM_DIR
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+          if [ -z "${SHELLCHECK-}" ]; then nvm install 16 && nvm unalias default && npm install && npm prune && npm ls urchin doctoc eclint dockerfile_lint; fi
+          make TEST_SUITE=fast URCHIN="$(npm bin)/urchin" test-bash
 
